@@ -21,7 +21,7 @@ const HERO_EXAMPLES = [
   },
   {
     id: 2,
-    name: "Anna",
+    name: "Annfaa",
     type: "Anna, 31",
     before: "../public//hero/bad2.webp",
     after: "../public//hero/good2.webp"
