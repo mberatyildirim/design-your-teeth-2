@@ -16,43 +16,43 @@ const HERO_EXAMPLES = [
     id: 1,
     name: "David",
     type: "David, 27",
-    before: "../public//hero/bad1.webp", 
-    after: "../public//hero/good1.webp"
+    before: "/hero/bad1.webp", 
+    after: "/hero/good1.webp"
   },
   {
     id: 2,
-    name: "Annfaa",
+    name: "Anna",
     type: "Anna, 31",
-    before: "../public//hero/bad2.webp",
-    after: "../public//hero/good2.webp"
+    before: "/hero/bad2.webp",
+    after: "/hero/good2.webp"
   },
   {
     id: 3,
     name: "Sarah",  
     type: "Sarah, 28",
-    before: "../public//hero/bad3.webp",
-    after: "../public//hero/good3.webp"
+    before: "/hero/bad3.webp",
+    after: "/hero/good3.webp"
   },
   {
     id: 4,
     name: "Emma",
     type: "Emma, 30",
-    before: "../public//hero/bad4.webp",
-    after: "../public//hero/good4.webp"
+    before: "/hero/bad4.webp",
+    after: "/hero/good4.webp"
   },
   {
     id: 5,
     name: "Jessica",
     type: "Jessica, 32",
-    before: "../public//hero/bad5.webp",
-    after: "../public//hero/good5.webp"
+    before: "/hero/bad5.webp",
+    after: "/hero/good5.webp"
   },
   {
     id: 6,
     name: "Jack",
     type: "Jack, 29",
-    before: "../public//hero/bad6.webp",
-    after: "../public//hero/good6.webp"
+    before: "/hero/bad6.webp",
+    after: "/hero/good6.webp"
   }
 ];
 

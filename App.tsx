@@ -47,16 +47,14 @@ const App: React.FC = () => {
         setView('admin');
       } else {
         setShowLogin(true);
-        setView('landing'); // View'ı landing yap ama login göster
+        setView('login'); // Login view'ını göster
       }
     } else {
       // Normal sayfa yükleme
+      setView('landing');
       const loggedIn = sessionStorage.getItem('admin_logged_in') === 'true';
       setIsAdminLoggedIn(loggedIn);
-      if (loggedIn && path !== '/admin') {
-        // Eğer login olmuşsa ama admin sayfasında değilse, normal view'ı göster
-        setShowLogin(false);
-      }
+      setShowLogin(false);
     }
   }, []);
 
@@ -239,6 +237,8 @@ const App: React.FC = () => {
              <p>In no event shall Design Your Teeth, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>
           </SimplePage>
         );
+      case 'login':
+        return showLogin ? <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} /> : <LandingPage onStart={handleStart} />;
       case 'landing':
       default:
         return <LandingPage onStart={handleStart} />;
