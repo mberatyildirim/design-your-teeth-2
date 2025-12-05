@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Design Your Teeth</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" href="/favicon.svg" />
@@ -16,6 +16,21 @@
         background-color: #FDFCF8; /* Warm off-white */
         color: #1c1917; /* Stone 900 */
         overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+        touch-action: pan-x pan-y; /* Prevent pinch zoom */
+      }
+      
+      /* Prevent iOS auto-zoom on input focus - minimum 16px font-size */
+      input[type="text"],
+      input[type="tel"],
+      input[type="email"],
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
+      
+      /* Prevent double-tap zoom */
+      * {
+        touch-action: manipulation;
       }
 
       /* Custom Scrollbar for a premium feel */

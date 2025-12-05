@@ -80,9 +80,9 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImag
     >
       {/* After Image (Background) - Full container, always visible */}
       <div className="absolute inset-0 w-full h-full">
-        <img 
-          src={afterImage} 
-          alt="After" 
+      <img 
+        src={afterImage} 
+        alt="After" 
           className="w-full h-full object-cover" 
           style={{ objectPosition: 'center' }}
           onLoad={() => {
@@ -91,7 +91,7 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImag
               setContainerWidth(containerRef.current.offsetWidth);
             }
           }}
-        />
+      />
       </div>
       
       <div className="absolute top-4 right-4 bg-primary/90 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-sm z-10 shadow-lg">
@@ -109,10 +109,10 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImag
             width: containerWidth > 0 ? `${containerWidth}px` : '100%',
             minWidth: '100%'
           }}
-        >
-          <img 
-            src={beforeImage} 
-            alt="Before" 
+      >
+        <img 
+          src={beforeImage} 
+          alt="Before" 
             className="w-full h-full object-cover" 
             style={{ objectPosition: 'center' }}
             onLoad={() => {
@@ -121,7 +121,7 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImag
                 setContainerWidth(containerRef.current.offsetWidth);
               }
             }}
-          />
+        />
         </div>
         <div className="absolute top-4 left-4 bg-stone-900/60 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-lg z-10">
           Original
