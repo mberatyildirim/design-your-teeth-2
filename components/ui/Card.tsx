@@ -25,6 +25,7 @@ export const Card: React.FC<CardProps> = ({
         ${selected ? 'ring-2 ring-primary ring-offset-2 shadow-xl' : 'shadow-sm'}
         ${className}
       `}
+      style={selected ? {} : {}}
     >
       {children}
     </div>

@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppStep, FormData, ShadeOption } from '../types';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { BeforeAfterSlider } from './BeforeAfterSlider';
-import { Check, UploadCloud, User, Mail, Phone, Loader2, ChevronRight, ChevronLeft, ArrowRight, Camera, Sparkles, Zap } from 'lucide-react';
+import { Check, UploadCloud, User, Phone, Loader2, ChevronRight, ChevronLeft, ArrowRight, Camera, Sparkles, Zap } from 'lucide-react';
 import { editImageWithAI } from '../utils/falAI';
-import { saveSubmissionToLocalStorage } from '../utils/localStorage';
+import { saveSubmissionToSupabase } from '../utils/supabase';
 import { cropImageToSquare, capturePhotoFromCamera } from '../utils/imageCrop';
 
 interface SmileAppProps {
@@ -59,6 +59,10 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [countryCode, setCountryCode] = useState('+1');
+  const [showFormPopup, setShowFormPopup] = useState(false); // Form popup state
+  const [phoneError, setPhoneError] = useState<string>(''); // Telefon format hatası
+  const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null); // Seçilen style ID (animation için)
+  const [selectedShadeId, setSelectedShadeId] = useState<string | null>(null); // Seçilen shade ID (animation için)
   
   // AI işlemi sonuçları için state'ler
   const [resultAfter, setResultAfter] = useState<string | null>(null); // AI'dan gelen after image URL
@@ -72,6 +76,18 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
   const handleBack = () => {
     if (step > 1) setStep((step - 1) as AppStep);
   };
+
+  // Auto-trigger AI submission when step 4 is reached
+  useEffect(() => {
+    if (step === 4 && !isProcessing && formData.image && formData.style && formData.shade) {
+      // Step 4'e gelince direkt AI submission'ı başlat
+      const fakeEvent = {
+        preventDefault: () => {},
+      } as React.FormEvent;
+      handleLeadSubmit(fakeEvent);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -108,7 +124,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       
       if (file) {
         setUploadProgress(50);
-        setFormData(prev => ({ ...prev, image: file }));
+      setFormData(prev => ({ ...prev, image: file }));
         setUploadProgress(100);
         
         setTimeout(() => {
@@ -126,12 +142,60 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
     }
   };
 
+  // Telefon format kontrolü - sadece rakamlar ve +, boşluk, tire, parantez kabul eder
+  const validatePhoneFormat = (phone: string): boolean => {
+    // Telefon numarası sadece rakamlar, boşluk, tire, parantez içerebilir
+    const phoneRegex = /^[\d\s\-\(\)]+$/;
+    // En az 7 rakam içermeli
+    const digitCount = phone.replace(/\D/g, '').length;
+    return phoneRegex.test(phone) && digitCount >= 7;
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Telefon format kontrolü
+    if (!validatePhoneFormat(formData.phone)) {
+      setPhoneError('Please enter a valid phone number (at least 7 digits)');
+      return;
+    }
+    
+    setPhoneError('');
+    setShowFormPopup(false);
+    
+    // Supabase'e verileri kaydet
+    try {
+      console.log("🟢 [SmileApp] Saving to Supabase...");
+      const selectedStyle = STYLES.find(s => s.id === formData.style);
+      const selectedShade = SHADES.find(s => s.id === formData.shade);
+      
+      if (resultAfter && selectedStyle && selectedShade) {
+        await saveSubmissionToSupabase({
+          timestamp: new Date().toISOString(),
+          name: formData.name,
+          phone: `${countryCode} ${formData.phone}`,
+          email: '', // Email kaldırıldı
+          freeTreatment: false,
+          selectedToothType: selectedStyle.title,
+          selectedToothColor: selectedShade.title,
+          outputImgUrl: resultAfter
+        });
+        console.log("✅ [SmileApp] Successfully saved to Supabase");
+        
+        // Form gönderildi flag'ini set et - artık initial popup çıkmayacak
+        sessionStorage.setItem('form_submitted', 'true');
+      }
+    } catch (error: any) {
+      console.error("❌ [SmileApp] Supabase save failed:", error);
+      // Hata olsa bile sessizce devam et, kullanıcı deneyimini bozma
+    }
+  };
+
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("🟢 [SmileApp] Form submitted");
     console.log("🟢 [SmileApp] Form data:", {
       name: formData.name,
-      email: formData.email,
       phone: formData.phone,
       style: formData.style,
       shade: formData.shade,
@@ -186,32 +250,12 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       console.log("✅ [SmileApp] AI processing completed. Result URL:", editedImageUrl);
       setResultAfter(editedImageUrl);
 
-      // Başarılı - sonuç ekranına geç
+      // Başarılı - sonuç ekranına geç ve form popup'ını göster
       console.log("✅ [SmileApp] All processes completed successfully");
       setIsProcessing(false);
       handleNext();
-
-      // LocalStorage'a verileri kaydet
-      try {
-        console.log("🟢 [SmileApp] Saving to localStorage...");
-        saveSubmissionToLocalStorage({
-          timestamp: new Date().toISOString(),
-          name: formData.name,
-          phone: `${countryCode} ${formData.phone}`,
-          email: formData.email,
-          freeTreatment: false, // Varsayılan olarak false, gerekirse form'dan alınabilir
-          selectedToothType: selectedStyle.title,
-          selectedToothColor: selectedShade.title,
-          outputImgUrl: editedImageUrl
-        });
-        console.log("✅ [SmileApp] Successfully saved to localStorage");
-      } catch (error: any) {
-        console.error("❌ [SmileApp] LocalStorage save failed:", {
-          message: error.message,
-          error: error
-        });
-        // Hata olsa bile sessizce devam et
-      }
+      // Form popup'ını göster
+      setShowFormPopup(true);
     } catch (error: any) {
       console.error("❌ [SmileApp] AI Processing Error:", {
         message: error.message,
@@ -254,15 +298,27 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
             <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Choose your aesthetics</h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-3 md:gap-6 flex-grow md:flex-grow-0">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-3 md:gap-6 flex-grow md:flex-grow-0">
             {STYLES.map((style) => (
               <div 
                 key={style.id}
-                onClick={() => setFormData({ ...formData, style: style.id })}
+                onClick={() => {
+                  // Seçimi yap ve animation state'ini set et
+                  setFormData({ ...formData, style: style.id });
+                  setSelectedStyleId(style.id);
+                  
+                  // 800ms sonra otomatik olarak bir sonraki adıma geç
+                  setTimeout(() => {
+                    handleNext();
+                    setSelectedStyleId(null); // Animation state'ini temizle
+                  }, 800);
+                }}
                 className={`
                   relative group cursor-pointer rounded-2xl md:rounded-3xl overflow-hidden transition-all duration-300
-                  ${formData.style === style.id ? 'ring-4 ring-primary' : 'ring-1 ring-stone-200 hover:ring-primary/50'}
-                  h-full min-h-[140px] md:min-h-[200px]
+                  ${formData.style === style.id ? 'ring-4 ring-primary scale-105' : 'ring-1 ring-stone-200 hover:ring-primary/50'}
+                  md:h-full md:min-h-[200px] md:w-full md:max-w-md
+                  flex md:block items-center
+                  h-32 md:h-auto
                 `}
               >
                 {/* Image */}
@@ -273,30 +329,20 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                 />
                 
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90 md:opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent opacity-90 md:hidden" />
 
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6 text-white flex justify-between items-end">
-                    <span className="font-bold text-lg md:text-xl tracking-tight">{style.title}</span>
-                    {formData.style === style.id && (
-                        <div className="bg-primary p-1.5 rounded-full shadow-lg animate-in zoom-in">
+                {/* Content - Mobile: yatay, Desktop: alt */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6 text-white flex justify-between items-end md:items-end">
+                    <span className="font-bold text-base md:text-xl tracking-tight">{style.title}</span>
+                    {(formData.style === style.id || selectedStyleId === style.id) && (
+                        <div className="bg-primary p-1.5 rounded-full shadow-lg animate-in zoom-in-95 duration-300 shrink-0">
                             <Check size={16} className="text-white" />
                         </div>
                     )}
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-4 md:mt-8 shrink-0 pb-2">
-             <Button 
-                onClick={handleNext} 
-                disabled={!formData.style} 
-                fullWidth 
-                className="py-4 text-lg shadow-xl shadow-primary/20"
-             >
-                Continue <ArrowRight size={20} className="ml-2"/>
-             </Button>
           </div>
         </div>
       )}
@@ -314,19 +360,39 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               <Card 
                 key={shade.id} 
                 interactive 
-                selected={formData.shade === shade.id}
-                onClick={() => setFormData({ ...formData, shade: shade.id })}
-                className="flex md:block items-center md:text-center p-4 md:p-10 space-x-4 md:space-x-0 md:space-y-4 cursor-pointer"
+                selected={formData.shade === shade.id || selectedShadeId === shade.id}
+                onClick={() => {
+                  // Seçimi yap ve animation state'ini set et
+                  setFormData({ ...formData, shade: shade.id });
+                  setSelectedShadeId(shade.id);
+                  
+                  // 800ms sonra otomatik olarak bir sonraki adıma geç
+                  setTimeout(() => {
+                    handleNext();
+                    setSelectedShadeId(null); // Animation state'ini temizle
+                  }, 800);
+                }}
+                className={`flex md:block items-center md:text-center p-4 md:p-10 space-x-4 md:space-x-0 md:space-y-4 cursor-pointer transition-all duration-300 relative ${
+                  selectedShadeId === shade.id ? 'scale-105' : ''
+                }`}
               >
+                {/* Web view tick - Sağ üst köşede yuvarlak */}
+                {(formData.shade === shade.id || selectedShadeId === shade.id) && (
+                  <div className="hidden md:flex absolute top-2 right-2 bg-primary p-2 rounded-full shadow-lg z-10 animate-in zoom-in-95 duration-300">
+                    <Check size={16} className="text-white" />
+                  </div>
+                )}
+                
                 <div 
                   className="w-12 h-12 md:w-20 md:h-20 rounded-full shrink-0 shadow-inner border border-stone-200"
                   style={{ backgroundColor: shade.hex }}
                 ></div>
                 <div className="text-left md:text-center flex-1">
-                  <h3 className="font-bold text-stone-900 text-lg">{shade.title}</h3>
+                  <h3 className="font-bold text-lg text-stone-900 !text-stone-900">{shade.title}</h3>
                 </div>
-                {formData.shade === shade.id && (
-                  <div className="bg-primary p-1 rounded-full md:hidden">
+                {/* Mobile view tick */}
+                {(formData.shade === shade.id || selectedShadeId === shade.id) && (
+                  <div className="bg-primary p-1 rounded-full md:hidden animate-in zoom-in-95 duration-300">
                     <Check size={14} className="text-white" />
                   </div>
                 )}
@@ -336,7 +402,6 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
 
           <div className="flex gap-4 pt-4 shrink-0 mt-auto md:mt-0">
              <Button variant="ghost" onClick={handleBack} className="flex-1 md:flex-none"><ChevronLeft size={18} className="mr-2"/> Back</Button>
-             <Button onClick={handleNext} disabled={!formData.shade} className="flex-[2] md:flex-none" fullWidth>Continue <ChevronRight size={18} className="ml-2"/></Button>
           </div>
         </div>
       )}
@@ -352,12 +417,12 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
           <div className="grid grid-cols-2 gap-4">
             {/* Upload Button */}
             <div className="border-4 border-dashed border-stone-200 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 text-center bg-stone-50 hover:bg-stone-100 transition-colors relative group cursor-pointer">
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleFileUpload} 
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-              />
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileUpload} 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+            />
               <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-primary group-hover:scale-110 transition-transform">
                 <UploadCloud size={24} className="md:w-8 md:h-8" />
               </div>
@@ -377,17 +442,17 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               <p className="text-stone-400 text-xs">Take Photo</p>
             </div>
           </div>
-          
-          {uploadProgress > 0 && (
+            
+            {uploadProgress > 0 && (
             <div className="max-w-xs mx-auto">
-              <div className="h-1.5 bg-stone-200 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-              </div>
+                <div className="h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
               <p className="text-xs text-stone-500 mt-2 font-bold uppercase tracking-wider text-center">
                 {uploadProgress < 50 ? 'Processing...' : 'Almost done...'} {uploadProgress}%
               </p>
-            </div>
-          )}
+              </div>
+            )}
 
           <div className="flex justify-center pt-2">
              <Button variant="ghost" onClick={handleBack} className="text-stone-400">Back</Button>
@@ -395,88 +460,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
         </div>
       )}
 
-      {/* STEP 4: LEAD GEN - OPTIMIZED INPUTS */}
-      {step === 4 && !isProcessing && (
-        <div className="max-w-md mx-auto space-y-6 md:space-y-8 w-full">
-           <div className="text-center space-y-2">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check size={24} className="md:w-8 md:h-8" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Analysis Complete</h2>
-            <p className="text-stone-500 text-sm md:text-base">Enter your details to reveal your transformation.</p>
-          </div>
-          
-          <form onSubmit={handleLeadSubmit} className="space-y-3 md:space-y-4">
-            <div className="space-y-3 md:space-y-4">
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Full Name" 
-                  required
-                  className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                />
-              </div>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  required
-                  className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
-                  value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <div className="relative w-24 md:w-28 group">
-                  <select 
-                    className="w-full h-full pl-2 md:pl-3 pr-2 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer font-medium text-sm md:text-base"
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                  >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="relative flex-1 group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
-                  <input 
-                    type="tel" 
-                    placeholder="Phone Number" 
-                    required
-                    className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              fullWidth 
-              size="lg" 
-              disabled={isProcessing}
-              className="py-4 md:py-5 text-lg shadow-xl shadow-primary/20 mt-2"
-            >
-              {isProcessing ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="animate-spin" /> Generating...
-                </span>
-              ) : "Reveal My New Smile"}
-            </Button>
-          </form>
-          
-          <div className="flex justify-center">
-             <Button variant="ghost" onClick={handleBack} className="text-sm">Back</Button>
-          </div>
-        </div>
-      )}
+      {/* STEP 4: AI PROCESSING - Auto-trigger, will show loading screen */}
 
       {/* GENERATION LOADING SCREEN - Beautiful intermediate screen */}
       {step === 4 && isProcessing && (
@@ -549,25 +533,97 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
 
       {/* STEP 5: RESULT - OPTIMIZED CARDS */}
       {step === 5 && (
-        <div className="space-y-6 md:space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full">
+        <div className="space-y-6 md:space-y-8 animate-in zoom-in-95 duration-700 max-w-2xl mx-auto w-full relative">
+          {/* Blurred background overlay when form popup is shown */}
+          {showFormPopup && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full animate-in zoom-in-95 duration-300">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-2">Get Your Results</h2>
+                  <p className="text-stone-500 text-sm md:text-base">Enter your details to access your transformation</p>
+          </div>
+          
+                <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Full Name" 
+                  required
+                  className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <div className="relative w-24 md:w-28 group">
+                  <select 
+                    className="w-full h-full pl-2 md:pl-3 pr-2 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer font-medium text-sm md:text-base"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="relative flex-1 group">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    required
+                        className={`w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base ${
+                          phoneError ? 'ring-2 ring-red-500' : ''
+                        }`}
+                    value={formData.phone}
+                        onChange={e => {
+                          setFormData({...formData, phone: e.target.value});
+                          setPhoneError(''); // Clear error on input
+                        }}
+                  />
+                </div>
+              </div>
+                  
+                  {phoneError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                      {phoneError}
+            </div>
+                  )}
+
+            <Button 
+              type="submit" 
+              fullWidth 
+              size="lg" 
+                    className="py-4 md:py-5 text-lg shadow-xl shadow-primary/20"
+                  >
+                    Continue
+            </Button>
+          </form>
+          </div>
+        </div>
+      )}
+
+          <div className={`${showFormPopup ? 'blur-sm pointer-events-none' : ''}`}>
            <div className="text-center space-y-2">
             <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Your Future Smile</h2>
             <p className="text-stone-500 text-sm md:text-base">Based on {STYLES.find(s => s.id === formData.style)?.title} aesthetics</p>
-            {aiError && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
-                ⚠️ {aiError}
-              </div>
-            )}
+              {aiError && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+                  ⚠️ {aiError}
+                </div>
+              )}
           </div>
 
           {/* Before/After Slider - AI'dan gelen sonuçlar ile */}
           {resultBefore && resultAfter ? (
-            <div className="w-full max-w-sm md:max-w-lg mx-auto bg-white p-2 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-stone-100">
-              <BeforeAfterSlider 
+          <div className="w-full max-w-sm md:max-w-lg mx-auto bg-white p-2 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-stone-100">
+             <BeforeAfterSlider 
                 beforeImage={resultBefore} 
                 afterImage={resultAfter} 
               />
-            </div>
+          </div>
           ) : (
             <div className="w-full max-w-sm md:max-w-lg mx-auto bg-white p-2 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-stone-100 aspect-square flex items-center justify-center">
               <Loader2 className="animate-spin text-primary" size={48} />
@@ -643,6 +699,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
             <Button variant="ghost" className="w-full text-stone-500 text-sm" onClick={onReset}>
               Design Another Smile
             </Button>
+          </div>
           </div>
         </div>
       )}

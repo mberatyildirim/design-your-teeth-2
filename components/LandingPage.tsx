@@ -9,6 +9,7 @@ import { Sparkles, CheckCircle2, ArrowRight, Zap, Smartphone, DollarSign, Chevro
 
 interface LandingPageProps {
   onStart: () => void;
+  onOpenForm?: () => void;
 }
 
 const HERO_EXAMPLES = [
@@ -98,7 +99,7 @@ const HOW_IT_WORKS_STEPS = [
   }
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm }) => {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [nextImageLoaded, setNextImageLoaded] = useState(false); // Bir sonraki görsel yüklendi mi?
@@ -174,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <h1 className="text-5xl md:text-7xl font-semibold tracking-tight text-stone-900 leading-[1.05]">
               Design Your <br/>
               <span className="text-primary italic relative">
-                Dream Smile
+                Dream Smile %100 Free
                 <svg className="absolute w-full h-3 -bottom-1 left-0 text-secondary/30" viewBox="0 0 100 10" preserveAspectRatio="none">
                   <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
                 </svg>
@@ -186,7 +187,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               Upload a photo and see the magic happen in seconds.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            {/* Desktop Button - Hidden on mobile */}
+            <div className="hidden lg:flex flex-col sm:flex-row gap-4 pt-4">
               <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20">
                 Try It Free Now <ArrowRight size={20} className="ml-2" />
               </Button>
@@ -232,6 +234,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                   <span className="font-bold text-stone-800">{HERO_EXAMPLES[currentHeroIndex].type}</span>
                </div>
+             </div>
+             
+             {/* Mobile Button - Shown only on mobile, right after before/after slider */}
+             <div className="lg:hidden flex justify-center pt-6 -mt-4">
+               <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20 w-full max-w-sm">
+                 Try It Free Now <ArrowRight size={20} className="ml-2" />
+               </Button>
              </div>
           </div>
         </div>
@@ -345,6 +354,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           </div>
       </section>
 
+      {/* Gallery Section - Scrolling Images */}
+      <section className="py-16 md:py-24 overflow-hidden bg-stone-50">
+        <div className="mb-12 text-center px-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-stone-900 mb-4">Real Results</h2>
+          <p className="text-lg text-stone-500 max-w-2xl mx-auto">See the amazing transformations from our community</p>
+        </div>
+        
+        {/* Infinite Scrolling Gallery - Single Row */}
+        <div className="relative">
+          <div className="flex gap-4 animate-scroll-left">
+            {HERO_EXAMPLES.map((example, idx) => (
+              <div key={`gallery-${idx}`} className="flex-shrink-0 w-64 md:w-80 h-64 md:h-80 rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                <img 
+                  src={example.after} 
+                  alt={`Result ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+            {/* Duplicate for seamless loop */}
+            {HERO_EXAMPLES.map((example, idx) => (
+              <div key={`gallery-dup-${idx}`} className="flex-shrink-0 w-64 md:w-80 h-64 md:h-80 rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                <img 
+                  src={example.after} 
+                  alt={`Result ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Benefits */}
       <section id="features" className="px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -366,7 +408,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </section>
 
       {/* Video Section - Wow Effect */}
-      <VideoSection />
+      <VideoSection onOpenForm={onOpenForm} />
 
       {/* FAQ Section - Footer'ın hemen üstü */}
       <FAQ />

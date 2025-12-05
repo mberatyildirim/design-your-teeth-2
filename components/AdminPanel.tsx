@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { LogOut, Download, Trash2, RefreshCw } from 'lucide-react';
-import { getSubmissionsFromLocalStorage, clearSubmissionsFromLocalStorage, FormSubmission } from '../utils/localStorage';
+import { getSubmissionsFromSupabase, clearSubmissionsFromSupabase, FormSubmission } from '../utils/supabase';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -12,14 +12,18 @@ interface AdminPanelProps {
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
 
-  // LocalStorage'dan verileri yükle
+  // Supabase'den verileri yükle
   useEffect(() => {
     loadSubmissions();
   }, []);
 
-  const loadSubmissions = () => {
-    const data = getSubmissionsFromLocalStorage();
-    setSubmissions(data);
+  const loadSubmissions = async () => {
+    try {
+      const data = await getSubmissionsFromSupabase();
+      setSubmissions(data);
+    } catch (error) {
+      console.error("❌ [AdminPanel] Failed to load submissions:", error);
+    }
   };
 
   // Verileri JSON olarak indir
@@ -63,10 +67,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   };
 
   // Tüm verileri sil
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm('Are you sure you want to delete all submissions? This cannot be undone.')) {
-      clearSubmissionsFromLocalStorage();
-      setSubmissions([]);
+      try {
+        await clearSubmissionsFromSupabase();
+        setSubmissions([]);
+      } catch (error) {
+        console.error("❌ [AdminPanel] Failed to clear submissions:", error);
+        alert('Failed to clear submissions. Please try again.');
+      }
     }
   };
 

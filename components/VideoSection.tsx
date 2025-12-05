@@ -1,9 +1,14 @@
 // Video Section Component - Wow effect oluşturan video bölümü
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, ArrowRight } from 'lucide-react';
+import { Button } from './ui/Button';
 
-export const VideoSection: React.FC = () => {
+interface VideoSectionProps {
+  onOpenForm?: () => void;
+}
+
+export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -81,18 +86,23 @@ export const VideoSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-bold tracking-wide border border-primary/10">
-            <Play size={14} className="fill-primary" />
-            <span>See It In Action</span>
-          </div>
           <h2 className="text-4xl md:text-6xl font-bold text-stone-900">
             Transform Your Smile
             <br />
             <span className="text-primary">In Seconds</span>
           </h2>
-          <p className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-6">
             Watch how our AI technology creates your perfect smile in real-time
           </p>
+          {onOpenForm && (
+            <Button 
+              onClick={onOpenForm}
+              size="lg" 
+              className="px-10 text-lg shadow-xl shadow-primary/20"
+            >
+              Get Started <ArrowRight size={20} className="ml-2" />
+            </Button>
+          )}
         </div>
 
         {/* Video Container */}

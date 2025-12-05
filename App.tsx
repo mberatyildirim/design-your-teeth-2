@@ -7,6 +7,16 @@ import { SmileApp } from './components/SmileApp';
 import { Button } from './components/ui/Button';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
+import { User, Phone, X } from 'lucide-react';
+import { saveSubmissionToSupabase } from './utils/supabase';
+
+const COUNTRY_CODES = [
+  { code: '+1', flag: '🇺🇸' },
+  { code: '+44', flag: '🇬🇧' },
+  { code: '+90', flag: '🇹🇷' },
+  { code: '+49', flag: '🇩🇪' },
+  { code: '+33', flag: '🇫🇷' },
+];
 
 // Simple text pages for legal/contact
 const SimplePage = ({ title, children, onBack }: { title: string, children?: React.ReactNode, onBack: () => void }) => (
@@ -26,6 +36,11 @@ const App: React.FC = () => {
   const [appStep, setAppStep] = useState<AppStep>(1);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // Initial loading state
+  const [showInitialPopup, setShowInitialPopup] = useState(false); // Initial popup state
+  const [initialFormData, setInitialFormData] = useState({ name: '', phone: '' }); // Initial popup form data
+  const [countryCode, setCountryCode] = useState('+1'); // Country code for initial popup
+  const [phoneError, setPhoneError] = useState<string>(''); // Phone format error
   const [formData, setFormData] = useState<FormData>({
     style: '',
     shade: '',
@@ -34,6 +49,87 @@ const App: React.FC = () => {
     email: '',
     phone: ''
   });
+
+  // Initial loading - 1-2 saniye göster, sonra popup göster
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+      // Loading bitince popup'ı göster (sadece landing page'de)
+      if (view === 'landing' && window.location.pathname !== '/admin') {
+        // Kullanıcı formu göndermiş mi kontrol et
+        // Eğer form gönderilmişse popup gösterme, gönderilmemişse her seferinde göster
+        const formSubmitted = sessionStorage.getItem('form_submitted') === 'true';
+        if (!formSubmitted) {
+          setShowInitialPopup(true);
+        }
+      }
+    }, 2000); // 2 saniye loading
+    return () => clearTimeout(timer);
+  }, [view]);
+
+  // Telefon format kontrolü
+  const validatePhoneFormat = (phone: string): boolean => {
+    const phoneRegex = /^[\d\s\-\(\)]+$/;
+    const digitCount = phone.replace(/\D/g, '').length;
+    return phoneRegex.test(phone) && digitCount >= 7;
+  };
+
+  // Initial popup form submit
+  const handleInitialPopupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validatePhoneFormat(initialFormData.phone)) {
+      setPhoneError('Please enter a valid phone number (at least 7 digits)');
+      return;
+    }
+    
+    setPhoneError('');
+    
+    // Supabase'e ilk popup formunu kaydet (eksik alanlar boş/null olacak)
+    try {
+      console.log("🟢 [App] Saving initial popup form to Supabase...");
+      await saveSubmissionToSupabase({
+        timestamp: new Date().toISOString(),
+        name: initialFormData.name,
+        phone: `${countryCode} ${initialFormData.phone}`,
+        email: '', // Email yok
+        freeTreatment: false,
+        selectedToothType: '', // Henüz seçilmedi
+        selectedToothColor: '', // Henüz seçilmedi
+        outputImgUrl: '' // Henüz oluşturulmadı
+      });
+      console.log("✅ [App] Initial popup form saved to Supabase");
+    } catch (error: any) {
+      console.error("❌ [App] Failed to save initial popup form to Supabase:", error);
+      // Hata olsa bile devam et
+    }
+    
+    // Form data'yı ana formData'ya kaydet
+    setFormData(prev => ({
+      ...prev,
+      name: initialFormData.name,
+      phone: initialFormData.phone
+    }));
+    // Popup'ı kapat (form gönderilmediği için flag set etme, böylece tekrar çıkacak)
+    setShowInitialPopup(false);
+  };
+
+  // Initial popup'ı kapat (sadece kapat, flag set etme - böylece tekrar çıkacak)
+  const handleCloseInitialPopup = () => {
+    setShowInitialPopup(false);
+  };
+
+  // Form popup'ını aç (VideoSection'dan çağrılacak)
+  const handleOpenFormPopup = () => {
+    // Form gönderilmiş mi kontrol et
+    const formSubmitted = sessionStorage.getItem('form_submitted') === 'true';
+    if (!formSubmitted) {
+      setShowInitialPopup(true);
+    } else {
+      // Form gönderilmişse direkt app'e yönlendir
+      handleStart();
+    }
+  };
 
   // URL routing ve session kontrolü
   useEffect(() => {
@@ -130,8 +226,8 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     // Login ekranı göster
-    if (showLogin) {
-      return <Login onLogin={handleAdminLogin} />;
+    if (showLogin && view === 'login') {
+      return <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} />;
     }
 
     // Admin panel göster
@@ -238,15 +334,114 @@ const App: React.FC = () => {
           </SimplePage>
         );
       case 'login':
-        return showLogin ? <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} /> : <LandingPage onStart={handleStart} />;
+        return showLogin ? <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} /> : <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} />;
       case 'landing':
       default:
-        return <LandingPage onStart={handleStart} />;
+        return <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} />;
     }
   };
 
+  // Initial loading screen
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-surface font-sans text-stone-900 flex items-center justify-center">
+        <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          <div className="relative mx-auto w-32 h-32 md:w-40 md:h-40">
+            <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping"></div>
+            <div className="absolute inset-4 bg-primary/20 rounded-full animate-pulse"></div>
+            <div className="absolute inset-8 bg-primary rounded-full flex items-center justify-center shadow-2xl">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 md:w-16 md:h-16 text-white">
+                <path d="M7 2c-2.5 0-4 2.5-4 5.5c0 2.5 1.5 4.5 1.5 6.5c0 3.5 2.5 6 4.5 6s2.5-3 3-3s1 3 3 3s4.5-2.5 4.5-6c0-2 1.5-4 1.5-6.5C21 4.5 19.5 2 17 2c-2.5 0-3 2.5-3 2.5S13.5 2 11 2s-3 2.5-3 2.5S7.5 2 7 2z"/>
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold text-primary">Free Smile Design</h1>
+          <p className="text-lg md:text-xl text-stone-500">Design your perfect smile in seconds</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface font-sans text-stone-900 selection:bg-primary/10 selection:text-primary flex flex-col overflow-x-hidden">
+      {/* Initial Popup - Blurred background with form */}
+      {showInitialPopup && view === 'landing' && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full animate-in zoom-in-95 duration-300 relative">
+            <button
+              onClick={handleCloseInitialPopup}
+              className="absolute top-4 right-4 w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center hover:bg-stone-200 transition-colors text-stone-600 hover:text-stone-900"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="text-center mb-6">
+              <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-2">Get Started</h2>
+              <p className="text-stone-500 text-sm md:text-base">Enter your details to begin your smile transformation</p>
+            </div>
+            
+            <form onSubmit={handleInitialPopupSubmit} className="space-y-4">
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Full Name" 
+                  required
+                  className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
+                  value={initialFormData.name}
+                  onChange={e => setInitialFormData({...initialFormData, name: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <div className="relative w-24 md:w-28 group">
+                  <select 
+                    className="w-full h-full pl-2 md:pl-3 pr-2 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all appearance-none cursor-pointer font-medium text-sm md:text-base"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="relative flex-1 group">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    required
+                    className={`w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base ${
+                      phoneError ? 'ring-2 ring-red-500' : ''
+                    }`}
+                    value={initialFormData.phone}
+                    onChange={e => {
+                      setInitialFormData({...initialFormData, phone: e.target.value});
+                      setPhoneError(''); // Clear error on input
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {phoneError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                  {phoneError}
+                </div>
+              )}
+              
+              <Button 
+                type="submit" 
+                fullWidth 
+                size="lg" 
+                className="py-4 md:py-5 text-lg shadow-xl shadow-primary/20"
+              >
+                Continue
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {view !== 'admin' && !showLogin && (
         <Header 
           onStart={handleStart} 
