@@ -17,43 +17,43 @@ const HERO_EXAMPLES = [
     id: 1,
     name: "David",
     type: "David, 27",
-    before: "/hero/bad1.webp", 
-    after: "/hero/good1.webp"
+    before: "/hero/bad1.png", 
+    after: "/hero/good1.png"
   },
   {
     id: 2,
     name: "Anna",
     type: "Anna, 31",
-    before: "/hero/bad2.webp",
-    after: "/hero/good2.webp"
+    before: "/hero/bad2.png",
+    after: "/hero/good2.png"
   },
   {
     id: 3,
     name: "Sarah",  
     type: "Sarah, 28",
-    before: "/hero/bad3.webp",
-    after: "/hero/good3.webp"
+    before: "/hero/bad3.png",
+    after: "/hero/good3.png"
   },
   {
     id: 4,
     name: "Emma",
     type: "Emma, 30",
-    before: "/hero/bad4.webp",
-    after: "/hero/good4.webp"
+    before: "/hero/bad4.png",
+    after: "/hero/good4.png"
   },
   {
     id: 5,
     name: "Jessica",
     type: "Jessica, 32",
-    before: "/hero/bad5.webp",
-    after: "/hero/good5.webp"
+    before: "/hero/bad5.png",
+    after: "/hero/good5.png"
   },
   {
     id: 6,
     name: "Jack",
     type: "Jack, 29",
-    before: "/hero/bad6.webp",
-    after: "/hero/good6.webp"
+    before: "/hero/bad6.png",
+    after: "/hero/good6.png"
   }
 ];
 

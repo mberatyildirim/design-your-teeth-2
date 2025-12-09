@@ -8,6 +8,7 @@ import { Button } from './components/ui/Button';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
 import { User, Phone, X } from 'lucide-react';
+import { getUserCountryCode } from './utils/geolocation';
 import { saveSubmissionToSupabase } from './utils/supabase';
 
 const COUNTRY_CODES = [
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true); // Initial loading state
   const [showInitialPopup, setShowInitialPopup] = useState(false); // Initial popup state
   const [initialFormData, setInitialFormData] = useState({ name: '', phone: '' }); // Initial popup form data
+  const [freeTreatment, setFreeTreatment] = useState(true); // Free treatment checkbox - default true
   const [countryCode, setCountryCode] = useState('+1'); // Country code for initial popup
   const [phoneError, setPhoneError] = useState<string>(''); // Phone format error
   const [formData, setFormData] = useState<FormData>({
@@ -49,6 +51,13 @@ const App: React.FC = () => {
     email: '',
     phone: ''
   });
+
+  // User'ın konumuna göre ülke kodunu çek
+  useEffect(() => {
+    getUserCountryCode().then(code => {
+      setCountryCode(code);
+    });
+  }, []);
 
   // Initial loading - 1-2 saniye göster, sonra popup göster
   useEffect(() => {
@@ -93,7 +102,7 @@ const App: React.FC = () => {
         name: initialFormData.name,
         phone: `${countryCode} ${initialFormData.phone}`,
         email: '', // Email yok
-        freeTreatment: false,
+        freeTreatment: freeTreatment,
         selectedToothType: '', // Henüz seçilmedi
         selectedToothColor: '', // Henüz seçilmedi
         outputImgUrl: '' // Henüz oluşturulmadı
@@ -428,6 +437,21 @@ const App: React.FC = () => {
                   {phoneError}
                 </div>
               )}
+              
+              {/* Free Treatment Checkbox */}
+              <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="freeTreatment"
+                  checked={freeTreatment}
+                  onChange={(e) => setFreeTreatment(e.target.checked)}
+                  className="w-5 h-5 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary cursor-pointer accent-primary"
+                  style={{ accentColor: '#0F2F28' }}
+                />
+                <label htmlFor="freeTreatment" className="text-sm md:text-base text-stone-700 cursor-pointer flex-1">
+                  Would you like to get your free treatment plan?
+                </label>
+              </div>
               
               <Button 
                 type="submit" 

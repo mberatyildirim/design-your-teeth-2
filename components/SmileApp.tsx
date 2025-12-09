@@ -4,10 +4,11 @@ import { AppStep, FormData, ShadeOption } from '../types';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { BeforeAfterSlider } from './BeforeAfterSlider';
-import { Check, UploadCloud, User, Phone, Loader2, ChevronRight, ChevronLeft, ArrowRight, Camera, Sparkles, Zap } from 'lucide-react';
+import { Check, UploadCloud, User, Phone, Loader2, ChevronRight, ChevronLeft, ArrowRight, Camera, Sparkles, Zap, X } from 'lucide-react';
 import { editImageWithAI } from '../utils/falAI';
 import { saveSubmissionToSupabase } from '../utils/supabase';
 import { cropImageToSquare, capturePhotoFromCamera } from '../utils/imageCrop';
+import { getUserCountryCode } from '../utils/geolocation';
 
 interface SmileAppProps {
   step: AppStep;
@@ -59,6 +60,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [countryCode, setCountryCode] = useState('+1');
+  const [freeTreatment, setFreeTreatment] = useState(true); // Free treatment checkbox - default true
   const [showFormPopup, setShowFormPopup] = useState(false); // Form popup state
   const [phoneError, setPhoneError] = useState<string>(''); // Telefon format hatası
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null); // Seçilen style ID (animation için)
@@ -68,6 +70,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
   const [resultAfter, setResultAfter] = useState<string | null>(null); // AI'dan gelen after image URL
   const [resultBefore, setResultBefore] = useState<string | null>(null); // Kullanıcının yüklediği original image URL
   const [aiError, setAiError] = useState<string | null>(null); // AI işlemi hata mesajı 
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null); // Büyütülmüş resim modalı için state 
 
   const handleNext = () => {
     if (step < 5) setStep((step + 1) as AppStep);
@@ -76,6 +79,20 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
   const handleBack = () => {
     if (step > 1) setStep((step - 1) as AppStep);
   };
+
+  // User'ın konumuna göre ülke kodunu çek
+  useEffect(() => {
+    // Önce localStorage'dan kontrol et (App.tsx'te set edilmiş olabilir)
+    const cached = localStorage.getItem('user_country_code');
+    if (cached) {
+      setCountryCode(cached);
+    } else {
+      // Yoksa API'den çek
+      getUserCountryCode().then(code => {
+        setCountryCode(code);
+      });
+    }
+  }, []);
 
   // Auto-trigger AI submission when step 4 is reached
   useEffect(() => {
@@ -175,7 +192,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
           name: formData.name,
           phone: `${countryCode} ${formData.phone}`,
           email: '', // Email kaldırıldı
-          freeTreatment: false,
+          freeTreatment: freeTreatment,
           selectedToothType: selectedStyle.title,
           selectedToothColor: selectedShade.title,
           outputImgUrl: resultAfter
@@ -270,7 +287,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       setAiError(error.message || 'Failed to process image. Please try again.');
       setIsProcessing(false);
       // Hata durumunda da sonuç ekranına geç (fallback image ile)
-      setResultAfter("/hero/good1.webp");
+      setResultAfter("/hero/good1.png");
       if (!resultBefore && formData.image) {
         setResultBefore(URL.createObjectURL(formData.image));
       }
@@ -589,21 +606,36 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   {phoneError && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
                       {phoneError}
-            </div>
+                    </div>
                   )}
+                  
+                  {/* Free Treatment Checkbox */}
+                  <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl">
+                    <input
+                      type="checkbox"
+                      id="freeTreatmentResult"
+                      checked={freeTreatment}
+                      onChange={(e) => setFreeTreatment(e.target.checked)}
+                      className="w-5 h-5 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary cursor-pointer accent-primary"
+                      style={{ accentColor: '#0F2F28' }}
+                    />
+                    <label htmlFor="freeTreatmentResult" className="text-sm md:text-base text-stone-700 cursor-pointer flex-1">
+                      Would you like to get your free treatment plan?
+                    </label>
+                  </div>
 
-            <Button 
-              type="submit" 
-              fullWidth 
-              size="lg" 
+                  <Button 
+                    type="submit" 
+                    fullWidth 
+                    size="lg" 
                     className="py-4 md:py-5 text-lg shadow-xl shadow-primary/20"
                   >
                     Continue
-            </Button>
-          </form>
-          </div>
-        </div>
-      )}
+                  </Button>
+                </form>
+              </div>
+            </div>
+          )}
 
           <div className={`${showFormPopup ? 'blur-sm pointer-events-none' : ''}`}>
            <div className="text-center space-y-2">
@@ -622,7 +654,12 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
              <BeforeAfterSlider 
                 beforeImage={resultBefore} 
                 afterImage={resultAfter} 
+                onImageClick={() => setEnlargedImage(resultAfter)}
               />
+              <p className="text-center text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
+                <Sparkles size={12} />
+                Tap image to enlarge
+              </p>
           </div>
           ) : (
             <div className="w-full max-w-sm md:max-w-lg mx-auto bg-white p-2 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-stone-100 aspect-square flex items-center justify-center">
@@ -700,6 +737,38 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               Design Another Smile
             </Button>
           </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Full Screen Image Modal */}
+      {enlargedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300 p-4"
+          onClick={() => setEnlargedImage(null)}
+        >
+          {/* Close Button */}
+          <button 
+            onClick={() => setEnlargedImage(null)}
+            className="absolute top-4 right-4 md:top-8 md:right-8 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Image Container */}
+          <div 
+            className="relative max-w-full max-h-full overflow-hidden rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on image
+          >
+            <img 
+              src={enlargedImage} 
+              alt="Enlarged Result" 
+              className="max-w-full max-h-[85vh] object-contain"
+            />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+              Your New Smile
+            </div>
           </div>
         </div>
       )}

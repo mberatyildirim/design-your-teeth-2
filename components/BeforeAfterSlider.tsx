@@ -5,13 +5,16 @@ import { MoveHorizontal } from 'lucide-react';
 interface BeforeAfterSliderProps {
   beforeImage: string;
   afterImage: string;
+  onImageClick?: () => void;
 }
 
-export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImage, afterImage }) => {
+export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImage, afterImage, onImageClick }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartTime = useRef<number>(0);
+  const dragStartPos = useRef<{x: number, y: number} | null>(null);
 
   // Container genişliğini hesapla ve güncelle
   useEffect(() => {
@@ -43,18 +46,62 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({ beforeImag
     }
   }, []);
 
-  const onMouseDown = () => setIsDragging(true);
-  const onTouchStart = () => setIsDragging(true);
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartTime.current = Date.now();
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+  
+  const onTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartTime.current = Date.now();
+    dragStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
 
-  const onMouseUp = () => setIsDragging(false);
-  const onTouchEnd = () => setIsDragging(false);
+  const onMouseUp = (e: React.MouseEvent) => {
+    setIsDragging(false);
+    
+    // Click detection: Short duration and small movement
+    if (onImageClick && dragStartPos.current) {
+      const moveDistance = Math.sqrt(
+        Math.pow(e.clientX - dragStartPos.current.x, 2) + 
+        Math.pow(e.clientY - dragStartPos.current.y, 2)
+      );
+      const duration = Date.now() - dragStartTime.current;
+      
+      if (moveDistance < 10 && duration < 200) {
+        onImageClick();
+      }
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    setIsDragging(false);
+    
+    // For touch, we can't easily get the end coordinates in onTouchEnd (touches list is empty)
+    // But we can check if it was a very short tap
+    const duration = Date.now() - dragStartTime.current;
+    if (onImageClick && duration < 200) {
+       // We might need to track last move position to check distance, but simply checking time is often enough for "tap" vs "drag"
+       onImageClick();
+    }
+  };
 
   const onMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) handleMove(e.clientX);
+    if (isDragging) {
+      e.preventDefault();
+      handleMove(e.clientX);
+    }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (isDragging) handleMove(e.touches[0].clientX);
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleMove(e.touches[0].clientX);
+    }
   };
 
   useEffect(() => {
