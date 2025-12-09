@@ -632,6 +632,10 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   >
                     Continue
                   </Button>
+                  
+                  <p className="text-[10px] text-stone-400 text-center px-4 leading-tight">
+                    By continuing, you agree to our Terms & Privacy Policy.
+                  </p>
                 </form>
               </div>
             </div>
