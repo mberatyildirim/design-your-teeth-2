@@ -6,10 +6,14 @@ import { BeforeAfterSlider } from './BeforeAfterSlider';
 import { VideoSection } from './VideoSection';
 import { FAQ } from './FAQ';
 import { Sparkles, CheckCircle2, ArrowRight, Zap, Smartphone, DollarSign, ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
+import { QuickSmileGenerator } from './QuickSmileGenerator';
+import { Language, translations } from '../utils/translations';
 
 interface LandingPageProps {
   onStart: () => void;
   onOpenForm?: () => void;
+  language: Language;
+  countryCode: string;
 }
 
 const HERO_EXAMPLES = [
@@ -99,7 +103,8 @@ const HOW_IT_WORKS_STEPS = [
   }
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, language, countryCode }) => {
+  const t = translations[language];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [nextImageLoaded, setNextImageLoaded] = useState(false); // Bir sonraki görsel yüklendi mi?
@@ -161,21 +166,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
   return (
     <div className="flex flex-col gap-24 pb-24 animate-in fade-in duration-700">
       
+      {/* Quick Generator Section (New Hero) */}
+      <section className="pt-8 md:pt-16 px-4">
+        <QuickSmileGenerator language={language} countryCode={countryCode} />
+      </section>
+
       {/* Hero Section */}
-      <section className="pt-8 md:pt-16 px-6">
+      <section className="px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 md:gap-24 items-center">
           
           {/* Text Content */}
           <div className="space-y-8 order-2 lg:order-1">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-bold tracking-wide border border-primary/10">
               <Star size={14} className="fill-primary" />
-              <span>#1 AI Smile Designer</span>
+              <span>{t.hero.badge}</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-semibold tracking-tight text-stone-900 leading-[1.05]">
-              Design Your <br/>
+              {t.hero.titleStart} <br/>
               <span className="text-primary italic relative">
-                Dream Smile %100 Free
+                {t.hero.titleEnd}
                 <svg className="absolute w-full h-3 -bottom-1 left-0 text-secondary/30" viewBox="0 0 100 10" preserveAspectRatio="none">
                   <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
                 </svg>
@@ -183,25 +193,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
             </h1>
             
             <p className="text-xl text-stone-500 font-light max-w-lg leading-relaxed">
-              Visualize your perfect smile instantly with our revolutionary AI. 
-              Upload a photo and see the magic happen in seconds.
+              {t.hero.subtitle}
             </p>
             
             {/* Desktop Button - Hidden on mobile */}
             <div className="hidden lg:flex flex-col sm:flex-row gap-4 pt-4">
               <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20">
-                Try It Free Now <ArrowRight size={20} className="ml-2" />
+                {t.hero.cta} <ArrowRight size={20} className="ml-2" />
               </Button>
             </div>
 
             <div className="flex items-center gap-6 text-sm font-medium text-stone-500 pt-2">
               <div className="flex items-center gap-2">
                 <div className="bg-green-100 p-1 rounded-full"><CheckCircle2 size={14} className="text-green-600" /></div>
-                <span>100% Free Tool</span>
+                <span>{t.hero.freeTool}</span>
               </div>
               <div className="flex items-center gap-2">
                  <div className="bg-green-100 p-1 rounded-full"><CheckCircle2 size={14} className="text-green-600" /></div>
-                <span>No Sign Up Required</span>
+                <span>{t.hero.noSignUp}</span>
               </div>
             </div>
           </div>
@@ -239,7 +248,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
              {/* Mobile Button - Shown only on mobile, right after before/after slider */}
              <div className="lg:hidden flex justify-center pt-6 -mt-4">
                <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20 w-full max-w-sm">
-                 Try It Free Now <ArrowRight size={20} className="ml-2" />
+                 {t.hero.cta} <ArrowRight size={20} className="ml-2" />
                </Button>
              </div>
           </div>
@@ -261,11 +270,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
         </div>
       </section>
 
+
       {/* Feature Steps - Modern Design */}
       <section id="how-it-works" className="px-4 md:px-6 py-16 md:py-20 max-w-6xl mx-auto">
         <div className="space-y-8 md:space-y-10">
           {/* Section Title */}
-          <h2 className="text-3xl md:text-5xl font-bold text-stone-900">How It Works</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-stone-900">{t.howItWorks.title}</h2>
 
           {/* Main Content Card */}
           <div className="bg-stone-50 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 lg:p-12 relative overflow-hidden">
@@ -286,10 +296,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
                   </div>
                   <div className="flex-1">
                     <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-stone-900 mb-3 md:mb-4">
-                      {HOW_IT_WORKS_STEPS[currentStepIndex].title}
+                      {/* Using translations for steps */}
+                      {currentStepIndex === 0 && t.howItWorks.step1Title}
+                      {currentStepIndex === 1 && t.howItWorks.step2Title}
+                      {currentStepIndex === 2 && t.howItWorks.step3Title}
                     </h3>
                     <p className="text-base md:text-lg text-stone-600 leading-relaxed">
-                      {HOW_IT_WORKS_STEPS[currentStepIndex].desc}
+                      {currentStepIndex === 0 && t.howItWorks.step1Desc}
+                      {currentStepIndex === 1 && t.howItWorks.step2Desc}
+                      {currentStepIndex === 2 && t.howItWorks.step3Desc}
                     </p>
                   </div>
                 </div>
@@ -306,7 +321,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
                           : 'bg-white text-stone-600 hover:bg-stone-100'
                       }`}
                     >
-                      <span className="font-bold text-base md:text-lg">{step.title}</span>
+                      <span className="font-bold text-base md:text-lg">
+                        {idx === 0 && t.howItWorks.step1Title}
+                        {idx === 1 && t.howItWorks.step2Title}
+                        {idx === 2 && t.howItWorks.step3Title}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -330,8 +349,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
       {/* Testimonials */}
       <section id="stories" className="px-6 py-24 max-w-7xl mx-auto">
          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-            <h2 className="text-3xl md:text-5xl font-semibold text-stone-900">Real Stories</h2>
-            <p className="text-lg text-stone-500">See what our community is saying about their new smiles.</p>
+            <h2 className="text-3xl md:text-5xl font-semibold text-stone-900">{t.stories.title}</h2>
+            <p className="text-lg text-stone-500">{t.stories.subtitle}</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -357,8 +376,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
       {/* Gallery Section - Scrolling Images */}
       <section className="py-16 md:py-24 overflow-hidden bg-stone-50">
         <div className="mb-12 text-center px-6">
-          <h2 className="text-3xl md:text-5xl font-bold text-stone-900 mb-4">Real Results</h2>
-          <p className="text-lg text-stone-500 max-w-2xl mx-auto">See the amazing transformations from our community</p>
+          <h2 className="text-3xl md:text-5xl font-bold text-stone-900 mb-4">{t.results.title}</h2>
+          <p className="text-lg text-stone-500 max-w-2xl mx-auto">{t.results.subtitle}</p>
         </div>
         
         {/* Infinite Scrolling Gallery - Single Row */}
@@ -391,10 +410,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
       <section id="features" className="px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-                { icon: <Zap size={24} />, title: "Instant", desc: "< 30 Seconds" },
-                { icon: <Sparkles size={24} />, title: "AI-Powered", desc: "99% Accuracy" },
-                { icon: <Smartphone size={24} />, title: "Mobile Ready", desc: "Works everywhere" },
-                { icon: <DollarSign size={24} />, title: "100% Free", desc: "No Credit Card" }
+                { icon: <Zap size={24} />, title: t.benefits.instant, desc: t.benefits.instantDesc },
+                { icon: <Sparkles size={24} />, title: t.benefits.aiPowered, desc: t.benefits.aiDesc },
+                { icon: <Smartphone size={24} />, title: t.benefits.mobileReady, desc: t.benefits.mobileDesc },
+                { icon: <DollarSign size={24} />, title: t.benefits.free, desc: t.benefits.freeDesc }
             ].map((item, idx) => (
                 <div key={idx} className="flex flex-col items-center text-center p-6 rounded-3xl bg-white border border-stone-100 hover:shadow-xl transition-all duration-300">
                     <div className="w-12 h-12 bg-primary/5 text-primary rounded-full flex items-center justify-center mb-4">
@@ -408,10 +427,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
       </section>
 
       {/* Video Section - Wow Effect */}
-      <VideoSection onOpenForm={onOpenForm} />
+      <VideoSection onOpenForm={onOpenForm} language={language} />
 
       {/* FAQ Section - Footer'ın hemen üstü */}
-      <FAQ />
+      <FAQ language={language} />
 
       {/* Bottom CTA */}
       <section className="px-6 mb-8 mt-12">
@@ -419,12 +438,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm })
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
            <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
            
-          <h2 className="text-4xl md:text-6xl font-semibold mb-8 relative z-10">Ready to Transform?</h2>
+          <h2 className="text-4xl md:text-6xl font-semibold mb-8 relative z-10">{t.cta.title}</h2>
           <p className="text-xl text-stone-300 mb-12 max-w-2xl mx-auto relative z-10">
-            Join 10,000+ happy smiles. It takes less than a minute and it's completely free.
+            {t.cta.subtitle}
           </p>
           <Button onClick={onStart} variant="secondary" size="lg" className="relative z-10 px-12 py-6 text-xl font-bold hover:scale-105">
-            Try It Free Now
+            {t.cta.button}
           </Button>
         </div>
       </section>

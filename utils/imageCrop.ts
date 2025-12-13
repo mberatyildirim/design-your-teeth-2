@@ -103,10 +103,13 @@ export async function cropImageToSquare(
 /**
  * Camera'dan fotoğraf çeker ve kare formata çevirir
  * @param size - Kare boyutu (default: 1024x1024)
+ * @param cancelText - Cancel buton metni
  * @returns Cropped image File veya null (kullanıcı iptal ederse)
  */
 export async function capturePhotoFromCamera(
-  size: number = 1024
+  size: number = 1024,
+  captureText: string = '📷 Capture',
+  cancelText: string = '✕ Cancel'
 ): Promise<File | null> {
   return new Promise((resolve, reject) => {
     // Video element oluştur
@@ -150,7 +153,7 @@ export async function capturePhotoFromCamera(
         
         // Capture button oluştur
         const captureBtn = document.createElement('button');
-        captureBtn.textContent = '📷 Capture';
+        captureBtn.textContent = captureText;
         captureBtn.style.position = 'fixed';
         captureBtn.style.bottom = '20px';
         captureBtn.style.left = '50%';
@@ -167,7 +170,7 @@ export async function capturePhotoFromCamera(
         
         // Cancel button oluştur
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = '✕ Cancel';
+        cancelBtn.textContent = cancelText;
         cancelBtn.style.position = 'fixed';
         cancelBtn.style.top = '20px';
         cancelBtn.style.right = '20px';

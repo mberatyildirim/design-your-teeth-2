@@ -53,33 +53,44 @@ const COUNTRY_TO_CODE: { [key: string]: string } = {
 const DEFAULT_CODE = '+1';
 
 /**
- * User'ın konumuna göre telefon ülke kodunu çek
- * Geolocation API veya IP-based geolocation kullanır
+ * Returns country info including code and calling code
  */
-export async function getUserCountryCode(): Promise<string> {
+export async function getUserCountryInfo(): Promise<{ countryCode: string, callingCode: string }> {
   try {
-    // Önce localStorage'dan kontrol et (cache)
-    const cached = localStorage.getItem('user_country_code');
-    if (cached) {
-      return cached;
+    // Check localStorage first
+    const cachedCode = localStorage.getItem('user_country_code');
+    const cachedCountry = localStorage.getItem('user_country_iso');
+    
+    if (cachedCode && cachedCountry) {
+      return { countryCode: cachedCountry, callingCode: cachedCode };
     }
 
-    // IP-based geolocation API kullan (ücretsiz ve permission gerektirmez)
+    // IP-based geolocation
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
     
     if (data.country_code && COUNTRY_TO_CODE[data.country_code]) {
-      const code = COUNTRY_TO_CODE[data.country_code];
-      // Cache'e kaydet
-      localStorage.setItem('user_country_code', code);
-      return code;
+      const callingCode = COUNTRY_TO_CODE[data.country_code];
+      // Cache
+      localStorage.setItem('user_country_code', callingCode);
+      localStorage.setItem('user_country_iso', data.country_code);
+      
+      return { countryCode: data.country_code, callingCode };
     }
     
-    // Fallback: default code
-    return DEFAULT_CODE;
+    return { countryCode: 'US', callingCode: DEFAULT_CODE };
   } catch (error) {
-    console.error('❌ [Geolocation] Failed to get country code:', error);
-    return DEFAULT_CODE;
+    console.error('❌ [Geolocation] Failed to get country info:', error);
+    return { countryCode: 'US', callingCode: DEFAULT_CODE };
   }
+}
+
+/**
+ * User'ın konumuna göre telefon ülke kodunu çek
+ * Geolocation API veya IP-based geolocation kullanır
+ */
+export async function getUserCountryCode(): Promise<string> {
+  const info = await getUserCountryInfo();
+  return info.callingCode;
 }
 

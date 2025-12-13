@@ -2,12 +2,16 @@
 import React from 'react';
 import { Button } from './ui/Button';
 import { ViewState } from '../types';
+import { Language, translations } from '../utils/translations';
+import { Globe } from 'lucide-react';
 
 interface HeaderProps {
   onStart: () => void;
   currentView: ViewState;
   onLogoClick: () => void;
   onNavigate: (section: string) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
 }
 
 const ToothIcon = ({ className }: { className?: string }) => (
@@ -24,7 +28,9 @@ const ToothIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const Header: React.FC<HeaderProps> = ({ onStart, currentView, onLogoClick, onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({ onStart, currentView, onLogoClick, onNavigate, language, setLanguage }) => {
+  const t = translations[language].nav;
+
   return (
     <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-stone-100">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -41,23 +47,31 @@ export const Header: React.FC<HeaderProps> = ({ onStart, currentView, onLogoClic
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          <button onClick={() => onNavigate('how-it-works')} className="text-stone-600 hover:text-primary font-medium transition-colors">How it Works</button>
-          <button onClick={() => onNavigate('stories')} className="text-stone-600 hover:text-primary font-medium transition-colors">Real Stories</button>
-          <button onClick={() => onNavigate('features')} className="text-stone-600 hover:text-primary font-medium transition-colors">Features</button>
+          <button onClick={() => onNavigate('how-it-works')} className="text-stone-600 hover:text-primary font-medium transition-colors">{t.howItWorks}</button>
+          <button onClick={() => onNavigate('stories')} className="text-stone-600 hover:text-primary font-medium transition-colors">{t.realStories}</button>
+          <button onClick={() => onNavigate('features')} className="text-stone-600 hover:text-primary font-medium transition-colors">{t.features}</button>
         </nav>
 
-        {/* CTA */}
-        <div>
+        {/* CTA & Language */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setLanguage(language === 'en' ? 'bg' : 'en')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-stone-100 text-stone-600 transition-colors text-sm font-medium"
+          >
+            <Globe size={16} />
+            {language === 'en' ? 'EN' : 'BG'}
+          </button>
+
           {currentView === 'app' ? (
             <div className="flex items-center gap-2 text-sm font-medium text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Design Mode
+              {t.designMode}
             </div>
           ) : (
-            <Button onClick={onStart} size="sm" className="font-bold">Try It Free Now</Button>
+            <Button onClick={onStart} size="sm" className="font-bold hidden sm:flex">{t.tryFree}</Button>
           )}
         </div>
       </div>

@@ -9,6 +9,7 @@ import { editImageWithAI } from '../utils/falAI';
 import { saveSubmissionToSupabase } from '../utils/supabase';
 import { cropImageToSquare, capturePhotoFromCamera } from '../utils/imageCrop';
 import { getUserCountryCode } from '../utils/geolocation';
+import { Language, translations } from '../utils/translations';
 
 interface SmileAppProps {
   step: AppStep;
@@ -16,36 +17,37 @@ interface SmileAppProps {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   onReset: () => void;
+  language?: Language;
 }
 
 // Optimized Styles - Vite'da public folder'daki dosyalara / ile erişilir
-const STYLES = [
+const getStyles = (t: any) => [
   { 
     id: 'natural', 
-    title: 'Natural', 
+    title: t.styles.natural, 
     image: '/tooth-types/natural.jpg' 
   },
   { 
     id: 'hollywood', 
-    title: 'Hollywood', 
+    title: t.styles.hollywood, 
     image: '/tooth-types/hollywood.jpg' 
   },
   { 
     id: 'oval', 
-    title: 'Oval', 
+    title: t.styles.oval, 
     image: '/tooth-types/oval.jpg' 
   },
   { 
     id: 'dominant', 
-    title: 'Dominant', 
+    title: t.styles.dominant, 
     image: '/tooth-types/dominant.jpg' 
   },
 ];
 
-const SHADES: ShadeOption[] = [
-  { id: 'bl1', title: 'Extra White (BL1)', hex: '#FFFFFF' },
-  { id: 'bl3', title: 'Bright White (BL3)', hex: '#F4F6F4' },
-  { id: 'a1', title: 'Natural (A1)', hex: '#EEEEE2' },
+const getShades = (t: any): ShadeOption[] => [
+  { id: 'bl1', title: t.shades.bl1, hex: '#FFFFFF' },
+  { id: 'bl3', title: t.shades.bl3, hex: '#F4F6F4' },
+  { id: 'a1', title: t.shades.a1, hex: '#EEEEE2' },
 ];
 
 const COUNTRY_CODES = [
@@ -56,7 +58,10 @@ const COUNTRY_CODES = [
   { code: '+33', flag: '🇫🇷' },
 ];
 
-export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, setFormData, onReset }) => {
+export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, setFormData, onReset, language = 'en' }) => {
+  const t = translations[language].smileApp;
+  const STYLES = getStyles(t);
+  const SHADES = getShades(t);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [countryCode, setCountryCode] = useState('+1');
@@ -137,7 +142,11 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       setUploadProgress(10);
       console.log("🟢 [SmileApp] Opening camera...");
       
-      const file = await capturePhotoFromCamera(1024);
+      const file = await capturePhotoFromCamera(
+        1024,
+        translations[language].camera.capture,
+        translations[language].camera.cancel
+      );
       
       if (file) {
         setUploadProgress(50);
@@ -312,7 +321,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       {step === 1 && (
         <div className="flex flex-col h-full md:h-auto">
           <div className="text-center mb-4 md:mb-8 shrink-0">
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Choose your aesthetics</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">{t.step1.title}</h2>
           </div>
           
           <div className="flex flex-col md:grid md:grid-cols-2 gap-3 md:gap-6 flex-grow md:flex-grow-0">
@@ -368,8 +377,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       {step === 2 && (
         <div className="flex flex-col h-full justify-between md:justify-start space-y-4 md:space-y-8">
            <div className="text-center shrink-0">
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Select your shade</h2>
-            <p className="text-stone-500 text-sm md:text-base">From natural brightness to Hollywood perfection.</p>
+            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">{t.step2.title}</h2>
+            <p className="text-stone-500 text-sm md:text-base">{t.step2.subtitle}</p>
           </div>
           
           <div className="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-6">
@@ -418,7 +427,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
           </div>
 
           <div className="flex gap-4 pt-4 shrink-0 mt-auto md:mt-0">
-             <Button variant="ghost" onClick={handleBack} className="flex-1 md:flex-none"><ChevronLeft size={18} className="mr-2"/> Back</Button>
+             <Button variant="ghost" onClick={handleBack} className="flex-1 md:flex-none"><ChevronLeft size={18} className="mr-2"/> {t.step2.back}</Button>
           </div>
         </div>
       )}
@@ -427,8 +436,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
       {step === 3 && (
         <div className="space-y-6 md:space-y-8 max-w-2xl mx-auto w-full">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Upload Your Photo</h2>
-            <p className="text-stone-500 text-sm md:text-base">Selfie or close-up. Make sure teeth are visible. Photo will be cropped to square.</p>
+            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">{t.step3.title}</h2>
+            <p className="text-stone-500 text-sm md:text-base">{t.step3.subtitle}</p>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -443,8 +452,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-primary group-hover:scale-110 transition-transform">
                 <UploadCloud size={24} className="md:w-8 md:h-8" />
               </div>
-              <h3 className="text-base md:text-lg font-bold text-stone-900 mb-1">Upload</h3>
-              <p className="text-stone-400 text-xs">From Gallery</p>
+              <h3 className="text-base md:text-lg font-bold text-stone-900 mb-1">{t.step3.upload}</h3>
+              <p className="text-stone-400 text-xs">{t.step3.gallery}</p>
             </div>
 
             {/* Camera Button */}
@@ -455,8 +464,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-primary group-hover:scale-110 transition-transform">
                 <Camera size={24} className="md:w-8 md:h-8" />
               </div>
-              <h3 className="text-base md:text-lg font-bold text-stone-900 mb-1">Camera</h3>
-              <p className="text-stone-400 text-xs">Take Photo</p>
+              <h3 className="text-base md:text-lg font-bold text-stone-900 mb-1">{t.step3.camera}</h3>
+              <p className="text-stone-400 text-xs">{t.step3.takePhoto}</p>
             </div>
           </div>
             
@@ -466,13 +475,13 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   <div className="h-full bg-green-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                 </div>
               <p className="text-xs text-stone-500 mt-2 font-bold uppercase tracking-wider text-center">
-                {uploadProgress < 50 ? 'Processing...' : 'Almost done...'} {uploadProgress}%
+                {uploadProgress < 50 ? t.step3.processing : t.step3.almostDone} {uploadProgress}%
               </p>
               </div>
             )}
 
           <div className="flex justify-center pt-2">
-             <Button variant="ghost" onClick={handleBack} className="text-stone-400">Back</Button>
+             <Button variant="ghost" onClick={handleBack} className="text-stone-400">{t.step3.back}</Button>
           </div>
         </div>
       )}
@@ -495,10 +504,10 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
             {/* Title */}
             <div className="space-y-3">
               <h2 className="text-3xl md:text-5xl font-bold text-stone-900">
-                Creating Your Perfect Smile
+                {t.step4.title}
               </h2>
               <p className="text-lg md:text-xl text-stone-500 max-w-md mx-auto">
-                Our AI is analyzing your photo and applying your selected aesthetic...
+                {t.step4.subtitle}
               </p>
             </div>
 
@@ -509,8 +518,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   <Check className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-stone-900">Photo Analyzed</p>
-                  <p className="text-sm text-stone-500">Facial structure detected</p>
+                  <p className="font-bold text-stone-900">{t.step4.photoAnalyzed}</p>
+                  <p className="text-sm text-stone-500">{t.step4.structureDetected}</p>
                 </div>
               </div>
 
@@ -519,8 +528,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   <Loader2 className="w-5 h-5 text-primary animate-spin" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-stone-900">AI Processing</p>
-                  <p className="text-sm text-stone-500">Applying {STYLES.find(s => s.id === formData.style)?.title} style...</p>
+                  <p className="font-bold text-stone-900">{t.step4.aiProcessing}</p>
+                  <p className="text-sm text-stone-500">{t.step4.applyingStyle}</p>
                 </div>
               </div>
 
@@ -529,8 +538,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   <Zap className="w-5 h-5 text-stone-400" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-stone-600">Finalizing</p>
-                  <p className="text-sm text-stone-400">Almost ready...</p>
+                  <p className="font-bold text-stone-600">{t.step4.finalizing}</p>
+                  <p className="text-sm text-stone-400">{t.step4.almostReady}</p>
                 </div>
               </div>
             </div>
@@ -542,7 +551,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
-              <p className="text-sm text-stone-400 mt-4 font-medium">This usually takes 30-60 seconds</p>
+              <p className="text-sm text-stone-400 mt-4 font-medium">{t.step4.timeEstimate}</p>
             </div>
           </div>
         </div>
@@ -556,16 +565,16 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full animate-in zoom-in-95 duration-300">
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-2">Get Your Results</h2>
-                  <p className="text-stone-500 text-sm md:text-base">Enter your details to access your transformation</p>
-          </div>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-2">{t.step5.title}</h2>
+                  <p className="text-stone-500 text-sm md:text-base">{t.step5.subtitle}</p>
+                </div>
           
                 <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
                 <input 
                   type="text" 
-                  placeholder="Full Name" 
+                  placeholder={t.step5.namePlaceholder}
                   required
                   className="w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base"
                   value={formData.name}
@@ -589,16 +598,16 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-primary" size={18} />
                   <input 
                     type="tel" 
-                    placeholder="Phone Number" 
+                    placeholder={t.step5.phonePlaceholder}
                     required
-                        className={`w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base ${
-                          phoneError ? 'ring-2 ring-red-500' : ''
-                        }`}
+                    className={`w-full pl-11 pr-4 py-3 md:py-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-primary outline-none transition-all font-medium text-sm md:text-base ${
+                      phoneError ? 'ring-2 ring-red-500' : ''
+                    }`}
                     value={formData.phone}
-                        onChange={e => {
-                          setFormData({...formData, phone: e.target.value});
-                          setPhoneError(''); // Clear error on input
-                        }}
+                    onChange={e => {
+                      setFormData({...formData, phone: e.target.value});
+                      setPhoneError(''); // Clear error on input
+                    }}
                   />
                 </div>
               </div>
@@ -620,7 +629,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                       style={{ accentColor: '#0F2F28' }}
                     />
                     <label htmlFor="freeTreatmentResult" className="text-sm md:text-base text-stone-700 cursor-pointer flex-1">
-                      Would you like to get your free treatment plan?
+                      {t.step5.freeTreatment}
                     </label>
                   </div>
 
@@ -630,11 +639,11 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                     size="lg" 
                     className="py-4 md:py-5 text-lg shadow-xl shadow-primary/20"
                   >
-                    Continue
+                    {t.step5.continue}
                   </Button>
                   
                   <p className="text-[10px] text-stone-400 text-center px-4 leading-tight">
-                    By continuing, you agree to our Terms & Privacy Policy.
+                    {language === 'en' ? 'By continuing, you agree to our Terms & Privacy Policy.' : 'Продължавайки, се съгласявате с нашите Условия и Политика за поверителност.'}
                   </p>
                 </form>
               </div>
@@ -643,8 +652,8 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
 
           <div className={`${showFormPopup ? 'blur-sm pointer-events-none' : ''}`}>
            <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Your Future Smile</h2>
-            <p className="text-stone-500 text-sm md:text-base">Based on {STYLES.find(s => s.id === formData.style)?.title} aesthetics</p>
+            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">{t.step5.resultTitle}</h2>
+            <p className="text-stone-500 text-sm md:text-base">{t.step5.resultSubtitle}</p>
               {aiError && (
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
                   ⚠️ {aiError}
@@ -662,7 +671,7 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
               />
               <p className="text-center text-xs text-stone-400 mt-2 flex items-center justify-center gap-1">
                 <Sparkles size={12} />
-                Tap image to enlarge
+                {t.step5.tapToEnlarge}
               </p>
           </div>
           ) : (
@@ -675,22 +684,22 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
           <div className="grid grid-cols-3 gap-2 md:gap-4 mt-4 md:mt-8">
             <Card className="p-3 md:p-4 text-center border-none bg-stone-50">
               <div className="text-lg md:text-2xl font-bold text-primary mb-1">
-                {STYLES.find(s => s.id === formData.style)?.title.substring(0, 4)}
+                {(STYLES.find(s => s.id === formData.style)?.title || '').substring(0, 4)}
               </div>
-              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">Style</div>
+              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">{t.step5.style}</div>
             </Card>
             <Card className="p-3 md:p-4 text-center border-none bg-stone-50">
               <div className="text-lg md:text-2xl font-bold text-primary mb-1">
-                {SHADES.find(s => s.id === formData.shade)?.id.toUpperCase()}
+                {(SHADES.find(s => s.id === formData.shade)?.id || '').toUpperCase()}
               </div>
-              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">Shade</div>
+              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">{t.step5.shade}</div>
             </Card>
             <Card className="p-3 md:p-4 text-center border-none bg-stone-50">
               <div 
                 className="w-8 h-8 md:w-12 md:h-12 rounded-full mx-auto mb-1 border-2 border-stone-200"
                 style={{ backgroundColor: SHADES.find(s => s.id === formData.shade)?.hex }}
               ></div>
-              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">Color</div>
+              <div className="text-[9px] md:text-xs text-stone-500 uppercase tracking-wider font-bold">{t.step5.color}</div>
             </Card>
           </div>
 
@@ -735,10 +744,10 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                 }
               }}
             >
-              Download
+              {t.step5.download}
             </Button>
             <Button variant="ghost" className="w-full text-stone-500 text-sm" onClick={onReset}>
-              Design Another Smile
+              {t.step5.designAnother}
             </Button>
           </div>
           </div>

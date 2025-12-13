@@ -3,12 +3,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, ArrowRight } from 'lucide-react';
 import { Button } from './ui/Button';
+import { Language, translations } from '../utils/translations';
 
 interface VideoSectionProps {
   onOpenForm?: () => void;
+  language?: Language;
 }
 
-export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm }) => {
+export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm, language = 'en' }) => {
+  const t = translations[language].video;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -87,12 +90,12 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm }) => {
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16 space-y-4">
           <h2 className="text-4xl md:text-6xl font-bold text-stone-900">
-            Transform Your Smile
+            {t.title}
             <br />
-            <span className="text-primary">In Seconds</span>
+            <span className="text-primary">{t.subtitle}</span>
           </h2>
           <p className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-6">
-            Watch how our AI technology creates your perfect smile in real-time
+            {t.desc}
           </p>
           {onOpenForm && (
             <Button 
@@ -100,7 +103,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm }) => {
               size="lg" 
               className="px-10 text-lg shadow-xl shadow-primary/20"
             >
-              Get Started <ArrowRight size={20} className="ml-2" />
+              {t.cta} <ArrowRight size={20} className="ml-2" />
             </Button>
           )}
         </div>
@@ -151,16 +154,16 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ onOpenForm }) => {
 
             {/* Video Info Badge */}
             <div className="absolute top-6 left-6 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
-              AI-Powered Smile Design
+              {t.badge}
             </div>
           </div>
 
           {/* Stats Cards Below Video */}
           <div className="grid grid-cols-3 gap-4 md:gap-6 mt-8">
             {[
-              { label: 'Users', value: '10K+' },
-              { label: 'Smiles', value: '50K+' },
-              { label: 'Satisfaction', value: '99%' }
+              { label: t.stats.users, value: '10K+' },
+              { label: t.stats.smiles, value: '50K+' },
+              { label: t.stats.satisfaction, value: '99%' }
             ].map((stat, idx) => (
               <div
                 key={idx}
