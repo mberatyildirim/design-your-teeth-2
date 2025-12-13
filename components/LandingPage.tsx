@@ -5,8 +5,7 @@ import { Card } from './ui/Card';
 import { BeforeAfterSlider } from './BeforeAfterSlider';
 import { VideoSection } from './VideoSection';
 import { FAQ } from './FAQ';
-import { Sparkles, CheckCircle2, ArrowRight, Zap, Smartphone, DollarSign, ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
-import { QuickSmileGenerator } from './QuickSmileGenerator';
+import { Sparkles, CheckCircle2, ArrowRight, Zap, Smartphone, DollarSign, ChevronLeft, ChevronRight, Star, Quote, Palette, Crown, Sun } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
 interface LandingPageProps {
@@ -14,6 +13,7 @@ interface LandingPageProps {
   onOpenForm?: () => void;
   language: Language;
   countryCode: string;
+  onOpenQuickSmile: () => void;
 }
 
 const HERO_EXAMPLES = [
@@ -103,7 +103,7 @@ const HOW_IT_WORKS_STEPS = [
   }
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, language, countryCode }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, language, countryCode, onOpenQuickSmile }) => {
   const t = translations[language];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -166,13 +166,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, l
   return (
     <div className="flex flex-col gap-24 pb-24 animate-in fade-in duration-700">
       
-      {/* Quick Generator Section (New Hero) */}
-      <section className="pt-8 md:pt-16 px-4">
-        <QuickSmileGenerator language={language} countryCode={countryCode} />
-      </section>
-
       {/* Hero Section */}
-      <section className="px-6">
+      <section className="px-6 pt-16 md:pt-24">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 md:gap-24 items-center">
           
           {/* Text Content */}
@@ -198,7 +193,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, l
             
             {/* Desktop Button - Hidden on mobile */}
             <div className="hidden lg:flex flex-col sm:flex-row gap-4 pt-4">
-              <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20">
+              <Button onClick={onOpenQuickSmile} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20">
                 {t.hero.cta} <ArrowRight size={20} className="ml-2" />
               </Button>
             </div>
@@ -247,7 +242,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, l
              
              {/* Mobile Button - Shown only on mobile, right after before/after slider */}
              <div className="lg:hidden flex justify-center pt-6 -mt-4">
-               <Button onClick={onStart} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20 w-full max-w-sm">
+               <Button onClick={onOpenQuickSmile} size="lg" className="px-10 text-lg shadow-xl shadow-primary/20 w-full max-w-sm">
                  {t.hero.cta} <ArrowRight size={20} className="ml-2" />
                </Button>
              </div>
@@ -270,6 +265,64 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onOpenForm, l
         </div>
       </section>
 
+
+      {/* Custom Design Section - New Feature */}
+      <section className="px-6 py-20 bg-stone-900 text-white relative overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] opacity-30"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[100px] opacity-30"></div>
+
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center relative z-10">
+           <div className="space-y-8">
+             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-bold tracking-wide border border-white/20">
+                <Crown size={14} className="text-yellow-400" />
+                <span>{t.customDesign.premium}</span>
+             </div>
+             
+             <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+               {t.customDesign.title}
+             </h2>
+             
+             <p className="text-xl text-stone-300">
+               {t.customDesign.subtitle}
+             </p>
+
+             <div className="space-y-6 pt-4">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                    <Sparkles className="text-primary" />
+                  </div>
+                  <span className="text-lg font-medium">{t.customDesign.feature1}</span>
+               </div>
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                    <Palette className="text-secondary" />
+                  </div>
+                  <span className="text-lg font-medium">{t.customDesign.feature2}</span>
+               </div>
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                    <Sun className="text-yellow-400" />
+                  </div>
+                  <span className="text-lg font-medium">{t.customDesign.feature3}</span>
+               </div>
+             </div>
+
+             <Button onClick={onStart} size="lg" className="mt-8 bg-white text-black hover:bg-stone-200 border-none shadow-xl font-bold">
+               {t.customDesign.cta} <ArrowRight className="ml-2" />
+             </Button>
+           </div>
+           
+           <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-secondary rounded-[2.5rem] opacity-30 blur-lg"></div>
+              <img 
+                src="/customdesign.jpg" 
+                alt="Custom Design" 
+                className="relative rounded-[2rem] shadow-2xl border border-white/10 w-full"
+              />
+           </div>
+        </div>
+      </section>
 
       {/* Feature Steps - Modern Design */}
       <section id="how-it-works" className="px-4 md:px-6 py-16 md:py-20 max-w-6xl mx-auto">

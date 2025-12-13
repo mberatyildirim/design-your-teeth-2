@@ -18,6 +18,8 @@ interface SmileAppProps {
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   onReset: () => void;
   language?: Language;
+  onTermClick?: () => void;
+  onPrivacyClick?: () => void;
 }
 
 // Optimized Styles - Vite'da public folder'daki dosyalara / ile erişilir
@@ -58,7 +60,7 @@ const COUNTRY_CODES = [
   { code: '+33', flag: '🇫🇷' },
 ];
 
-export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, setFormData, onReset, language = 'en' }) => {
+export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, setFormData, onReset, language = 'en', onTermClick, onPrivacyClick }) => {
   const t = translations[language].smileApp;
   const STYLES = getStyles(t);
   const SHADES = getShades(t);
@@ -633,6 +635,17 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                     </label>
                   </div>
 
+                  <p className="text-[10px] text-stone-500 text-center leading-tight px-4 pb-2">
+                    {t.step5.termsPrefix}
+                    <button type="button" onClick={onTermClick} className="underline hover:text-primary mx-1">
+                      {t.step5.termsText}
+                    </button>
+                    &
+                    <button type="button" onClick={onPrivacyClick} className="underline hover:text-primary mx-1">
+                       {t.step5.privacyText}
+                    </button>
+                  </p>
+
                   <Button 
                     type="submit" 
                     fullWidth 
@@ -641,10 +654,6 @@ export const SmileApp: React.FC<SmileAppProps> = ({ step, setStep, formData, set
                   >
                     {t.step5.continue}
                   </Button>
-                  
-                  <p className="text-[10px] text-stone-400 text-center px-4 leading-tight">
-                    {language === 'en' ? 'By continuing, you agree to our Terms & Privacy Policy.' : 'Продължавайки, се съгласявате с нашите Условия и Политика за поверителност.'}
-                  </p>
                 </form>
               </div>
             </div>

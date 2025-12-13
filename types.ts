@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ViewState = 'landing' | 'app' | 'contact' | 'privacy' | 'terms' | 'admin';
+export type ViewState = 'landing' | 'app' | 'contact' | 'privacy' | 'terms' | 'admin' | 'quick-smile';
 
 export type AppStep = 1 | 2 | 3 | 4 | 5;
 

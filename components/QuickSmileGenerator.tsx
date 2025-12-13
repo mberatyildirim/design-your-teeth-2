@@ -10,9 +10,11 @@ import { BeforeAfterSlider } from './BeforeAfterSlider';
 interface QuickSmileGeneratorProps {
   language: Language;
   countryCode: string; // Phone prefix
+  onTermClick?: () => void;
+  onPrivacyClick?: () => void;
 }
 
-export const QuickSmileGenerator: React.FC<QuickSmileGeneratorProps> = ({ language, countryCode }) => {
+export const QuickSmileGenerator: React.FC<QuickSmileGeneratorProps> = ({ language, countryCode, onTermClick, onPrivacyClick }) => {
   const t = translations[language].quickGen;
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -189,7 +191,7 @@ export const QuickSmileGenerator: React.FC<QuickSmileGeneratorProps> = ({ langua
                 <div className="animate-in fade-in zoom-in-95 duration-500">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary text-sm font-bold tracking-wide border border-primary/10 mb-6">
                         <Sparkles size={16} />
-                        <span>AI Instant Magic</span>
+                        <span>{t.aiMagic}</span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-bold text-stone-900 mb-4 tracking-tight">
@@ -369,8 +371,19 @@ export const QuickSmileGenerator: React.FC<QuickSmileGeneratorProps> = ({ langua
                         </label>
                     </div>
 
+                    <p className="text-[10px] text-stone-500 text-center leading-tight px-4 pb-2">
+                        {t.terms}
+                        <button type="button" onClick={onTermClick} className="underline hover:text-primary mx-1">
+                          {t.termsLink?.split(' ')[0]} {/* "Terms" or "Conditions" */}
+                        </button>
+                        &
+                        <button type="button" onClick={onPrivacyClick} className="underline hover:text-primary mx-1">
+                           {t.termsLink?.split('&')[1] || 'Privacy Policy'}
+                        </button>
+                    </p>
+
                     <Button 
-                      type="submit" 
+                      type="submit"  
                       fullWidth 
                       size="lg" 
                       className="py-4 shadow-lg"
@@ -385,9 +398,6 @@ export const QuickSmileGenerator: React.FC<QuickSmileGeneratorProps> = ({ langua
                           t.continue
                         )}
                     </Button>
-                    <p className="text-[10px] text-stone-400 text-center leading-tight px-4">
-                        {t.terms}
-                    </p>
                 </form>
              </div>
         </div>

@@ -4,6 +4,7 @@ import { ViewState, AppStep, FormData } from './types';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { SmileApp } from './components/SmileApp';
+import { QuickSmileGenerator } from './components/QuickSmileGenerator'; // Import QuickSmileGenerator
 import { Button } from './components/ui/Button';
 import { Login } from './components/Login';
 import { AdminPanel } from './components/AdminPanel';
@@ -249,6 +250,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleOpenQuickSmile = () => {
+    setView('quick-smile');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const renderContent = () => {
     // Login ekranı göster
     if (showLogin && view === 'login') {
@@ -270,7 +276,23 @@ const App: React.FC = () => {
             setFormData={setFormData}
             onReset={handleResetApp}
             language={language}
+            onTermClick={() => setView('terms')}
+            onPrivacyClick={() => setView('privacy')}
           />
+        );
+      case 'quick-smile':
+        return (
+           <div className="max-w-7xl mx-auto px-4 py-8 animate-in fade-in duration-500">
+             <Button variant="ghost" onClick={handleLogoClick} className="mb-4 pl-0 hover:bg-transparent hover:text-primary">
+                ← Back
+             </Button>
+             <QuickSmileGenerator 
+                language={language} 
+                countryCode={countryCode} 
+                onTermClick={() => setView('terms')}
+                onPrivacyClick={() => setView('privacy')}
+             />
+           </div>
         );
       case 'contact':
         return (
@@ -353,10 +375,10 @@ const App: React.FC = () => {
           </SimplePage>
         );
       case 'login':
-        return showLogin ? <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} /> : <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} language={language} countryCode={countryCode} />;
+        return showLogin ? <Login onLoginSuccess={handleAdminLogin} onClose={() => { setShowLogin(false); setView('landing'); window.history.pushState({}, '', '/'); }} /> : <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} language={language} countryCode={countryCode} onOpenQuickSmile={handleOpenQuickSmile} />;
       case 'landing':
       default:
-        return <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} language={language} countryCode={countryCode} />;
+        return <LandingPage onStart={handleStart} onOpenForm={handleOpenFormPopup} language={language} countryCode={countryCode} onOpenQuickSmile={handleOpenQuickSmile} />;
     }
   };
 

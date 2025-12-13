@@ -38,13 +38,24 @@ export const translations = {
       download: "Download",
       tryAgain: "Try Another Photo",
       tapToEnlarge: "Tap image to enlarge",
+      aiMagic: "AI Instant Magic",
       formTitle: "Get Your Result",
       formDesc: "Enter your details to see your transformation",
       namePlaceholder: "Full Name",
       phonePlaceholder: "Phone Number",
       freeTreatment: "Would you like to get your free treatment plan?",
       continue: "Continue",
-      terms: "By continuing, you agree to our Terms & Privacy Policy."
+      terms: "By continuing, you agree to our ",
+      termsLink: "Terms & Privacy Policy"
+    },
+    customDesign: {
+        premium: "Premium Feature",
+        title: "Want More Control?",
+        subtitle: "Design every detail of your smile with our advanced customization tool.",
+        feature1: "Choose Tooth Shape",
+        feature2: "Select Exact Shade",
+        feature3: "Adjust Brightness",
+        cta: "Start Custom Design"
     },
     howItWorks: {
       title: "How It Works",
@@ -158,7 +169,10 @@ export const translations = {
         color: "Color",
         download: "Download",
         designAnother: "Design Another Smile",
-        tapToEnlarge: "Tap image to enlarge"
+        tapToEnlarge: "Tap image to enlarge",
+        termsPrefix: "By continuing, you agree to our ",
+        termsText: "Terms",
+        privacyText: "Privacy Policy"
       },
       styles: {
         natural: "Natural",
@@ -269,13 +283,24 @@ export const translations = {
       download: "Изтегли",
       tryAgain: "Пробвай друга снимка",
       tapToEnlarge: "Натисни за уголемяване",
+      aiMagic: "AI Моментална магия",
       formTitle: "Виж резултата",
       formDesc: "Въведете детайлите си, за да видите трансформацията",
       namePlaceholder: "Име и Фамилия",
       phonePlaceholder: "Телефонен номер",
       freeTreatment: "Искате ли да получите безплатен план за лечение?",
       continue: "Продължи",
-      terms: "Продължавайки, се съгласявате с нашите Условия и Политика за поверителност."
+      terms: "Продължавайки, се съгласявате с нашите ",
+      termsLink: "Условия и Политика за поверителност"
+    },
+    customDesign: {
+        premium: "Премиум функция",
+        title: "Искате повече контрол?",
+        subtitle: "Проектирайте всеки детайл от усмивката си с нашия усъвършенстван инструмент за персонализиране.",
+        feature1: "Избери форма на зъбите",
+        feature2: "Избери точен нюанс",
+        feature3: "Регулирай яркостта",
+        cta: "Започни персонализиран дизайн"
     },
     howItWorks: {
       title: "Как работи",
@@ -389,7 +414,10 @@ export const translations = {
         color: "Цвят",
         download: "Изтегли",
         designAnother: "Дизайн на нова усмивка",
-        tapToEnlarge: "Натисни за уголемяване"
+        tapToEnlarge: "Натисни за уголемяване",
+        termsPrefix: "Продължавайки, се съгласявате с нашите ",
+        termsText: "Условия",
+        privacyText: "Политика за поверителност"
       },
       styles: {
         natural: "Естествен",
